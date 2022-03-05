@@ -8,6 +8,7 @@ Citizen.CreateThread(function()
     Citizen.Wait(0)
     if ragdoll then
       SetPedToRagdoll(GetPlayerPed(-1), 1000, 1000, 0, 0, 0, 0)
+	  DisablePlayerFiring(PlayerId(), false)
     end
   end
 end)
@@ -35,7 +36,6 @@ Citizen.CreateThread(function()
 
 
 local mp_pointing = false
-local keyPressed = false
 
 local function startPointing()
     local ped = GetPlayerPed(-1)
@@ -62,42 +62,16 @@ local function stopPointing()
     ClearPedSecondaryTask(PlayerPedId())
 end
 
-local once = true
-local oldval = false
-local oldvalped = false
-
 Citizen.CreateThread(function()
     while true do
         Wait(0)
-
-        if once then
-            once = false
+		if IsControlJustPressed(0, 29) and not mp_pointing and IsPedOnFoot(PlayerPedId()) then
+            startPointing()
+            mp_pointing = true
         end
-
-        if not keyPressed then
-            if IsControlPressed(0, 29) and not mp_pointing and IsPedOnFoot(PlayerPedId()) then
-                Wait(200)
-                if not IsControlPressed(0, 29) then
-                    keyPressed = true
-                    startPointing()
-                    mp_pointing = true
-                else
-                    keyPressed = true
-                    while IsControlPressed(0, 29) do
-                        Wait(50)
-                    end
-                end
-            elseif (IsControlPressed(0, 29) and mp_pointing) or (not IsPedOnFoot(PlayerPedId()) and mp_pointing) then
-                keyPressed = true
-                mp_pointing = false
-                stopPointing()
-            end
-        end
-
-        if keyPressed then
-            if not IsControlPressed(0, 29) then
-                keyPressed = false
-            end
+        if (IsControlJustReleased(0, 29) and mp_pointing) or (not IsPedOnFoot(PlayerPedId()) and mp_pointing) then
+            mp_pointing = false
+            stopPointing()
         end
         if Citizen.InvokeNative(0x921CE12C489C4C41, PlayerPedId()) and not mp_pointing then
             stopPointing()
@@ -144,18 +118,23 @@ end)
 
 Citizen.CreateThread(function()
     local dict = "missminuteman_1ig_2"
-
+	local handsup = false
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do
         Citizen.Wait(100)
     end
     while true do
         Citizen.Wait(0)
-        if IsControlJustPressed(1, 323) then
+        if IsControlJustPressed(1, 323) and IsPedOnFoot(PlayerPedId()) then
                 TaskPlayAnim(GetPlayerPed(-1), dict, "handsup_enter", 8.0, 8.0, -1, 50, 0, false, false, false)
+				handsup = true
         end
         if IsControlJustReleased(1, 323) then
                 ClearPedTasks(GetPlayerPed(-1))
+				handsup = false
+        end
+		if handsup then
+				DisablePlayerFiring(PlayerId(), false)
         end
     end
 end)
