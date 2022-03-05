@@ -125,6 +125,17 @@ Citizen.CreateThread(function()
     end
     while true do
         Citizen.Wait(0)
+		
+		RegisterCommand("rendirse", function(source)
+			if handsup then
+				ClearPedTasks(GetPlayerPed(-1))
+				handsup = false
+			elseif handsup == false and IsPedOnFoot(PlayerPedId()) then
+				TaskPlayAnim(GetPlayerPed(-1), dict, "handsup_enter", 8.0, 8.0, -1, 50, 0, false, false, false)
+				handsup = true
+			end
+		end, false)
+		
         if IsControlJustPressed(1, 323) and IsPedOnFoot(PlayerPedId()) then
                 TaskPlayAnim(GetPlayerPed(-1), dict, "handsup_enter", 8.0, 8.0, -1, 50, 0, false, false, false)
 				handsup = true
